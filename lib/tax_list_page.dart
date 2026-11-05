@@ -2,8 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'models.dart';
+
 class TaxListPage extends StatefulWidget {
-  const TaxListPage({super.key});
+  final List<TaxRecord> records;
+  const TaxListPage({super.key, required this.records});
 
   @override
   State<TaxListPage> createState() => _TaxListPageState();
@@ -12,6 +15,8 @@ class TaxListPage extends StatefulWidget {
 class _TaxListPageState extends State<TaxListPage> {
   @override
   Widget build(BuildContext context) {
+    final totalIncome = widget.records.fold<double>(0, (s, r) => s + r.income);
+    final totalTax = widget.records.fold<double>(0, (s, r) => s + r.taxAmount);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -21,21 +26,27 @@ class _TaxListPageState extends State<TaxListPage> {
             color: Colors.black.withValues(alpha: 0.8),
           ),
         ),
+        scrolledUnderElevation: 0,
         leadingWidth: 90,
-        leading: Row(
-          children: [
-            const SizedBox(width: 16),
-            SvgPicture.asset(
-              'assets/images/back.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(Color(0xff4A84E3), BlendMode.srcIn),
-            ),
-            Text(
-              '返回',
-              style: TextStyle(fontSize: 16, color: Color(0xff4A84E3)),
-            ),
-          ],
+        leading: GestureDetector(
+          onTap: (){
+            Navigator.pop(context);
+          },
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              SvgPicture.asset(
+                'assets/images/back.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(Color(0xff4A84E3), BlendMode.srcIn),
+              ),
+              Text(
+                '返回',
+                style: TextStyle(fontSize: 16, color: Color(0xff4A84E3)),
+              ),
+            ],
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -85,7 +96,7 @@ class _TaxListPageState extends State<TaxListPage> {
                     ),
                     const Spacer(),
                     Text(
-                      "39000.00元",
+                      "${totalIncome.toStringAsFixed(2)}元",
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black.withValues(alpha: 0.8),
@@ -113,7 +124,7 @@ class _TaxListPageState extends State<TaxListPage> {
 
                     const Spacer(),
                     Text(
-                      "0.00元",
+                      "${totalTax.toStringAsFixed(2)}元",
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black.withValues(alpha: 0.8),
@@ -129,14 +140,9 @@ class _TaxListPageState extends State<TaxListPage> {
           Expanded(child: SingleChildScrollView(
             child: Column(
               spacing: 10,
-              children: [
-                _TaxItem(month: "2026-06"),
-                _TaxItem(month: "2026-05"),
-                _TaxItem(month: "2026-04"),
-                _TaxItem(month: "2026-03"),
-                _TaxItem(month: "2026-02"),
-                _TaxItem(month: "2026-01"),
-              ],
+              children: widget.records
+                  .map((record) => _TaxItem(record: record))
+                  .toList(),
             ),
           ))
         ],
@@ -146,8 +152,8 @@ class _TaxListPageState extends State<TaxListPage> {
 }
 
 class _TaxItem extends StatelessWidget {
-  final String month;
-  const _TaxItem({super.key,required this.month});
+  final TaxRecord record;
+  const _TaxItem({super.key, required this.record});
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +178,7 @@ class _TaxItem extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                month,
+                record.month,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.black.withValues(alpha: 0.8),
@@ -193,7 +199,7 @@ class _TaxItem extends StatelessWidget {
           Row(
             children: [
               Expanded(child: Text(
-                "扣缴义务人：陕西禾合化工科技有限公司",
+                "扣缴义务人：${record.agent}",
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -207,7 +213,7 @@ class _TaxItem extends StatelessWidget {
             ],
           ),
           Text(
-            "收入：6500.00元",
+            "收入：${record.income.toStringAsFixed(2)}元",
             style: TextStyle(
               fontSize: 14,
               color: Colors.black.withValues(alpha: 0.4),
@@ -215,7 +221,7 @@ class _TaxItem extends StatelessWidget {
             ),
           ),
           Text(
-            "已申报税额：0.00元",
+            "已申报税额：${record.taxAmount.toStringAsFixed(2)}元",
             style: TextStyle(
               fontSize: 14,
               color: Colors.black.withValues(alpha: 0.4),
